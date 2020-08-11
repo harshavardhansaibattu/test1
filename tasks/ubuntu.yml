@@ -1,0 +1,28 @@
+#transfer script host server to client server.
+- name: Transfer executable script
+  copy:
+      src: backup.sh
+      dest: /tmp/backup.sh
+      mode: 777
+# script will excute in client server  & backup (we mention path for backup).
+- name: Execute the script
+  shell: /tmp/backup.sh >>/tmp/backup.txt
+  become: yes
+  delay: 10  
+#when server is debian falour it use this apt command.
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+  become: yes 
+  when: ansible_os_family == "Debian" 
+- name: Check if reboot is required
+  stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+- name: Reboot system if required
+  reboot:
+    msg: Rebooting to complete system upgrade
+    reboot_timeout: 300
+  when: reboot_required.stat.exists
+- pause:
+    minutes: 0.30
